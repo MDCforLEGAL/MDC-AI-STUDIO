@@ -46,10 +46,7 @@
     .prose * { max-width: 100%; }
     .message-user { background: linear-gradient(135deg, #7c3aed 0%, #5b21b6 100%); }
     #chat-container { scroll-behavior: smooth; -webkit-overflow-scrolling: touch; }
-    /* Mobile sidebar */
-    #sidebar {
-      transition: transform 0.25s ease;
-    }
+    #sidebar { transition: transform 0.25s ease; }
     @media (max-width: 767px) {
       #sidebar {
         position: fixed;
@@ -58,9 +55,7 @@
         width: min(280px, 85vw);
         transform: translateX(-100%);
       }
-      #sidebar.open {
-        transform: translateX(0);
-      }
+      #sidebar.open { transform: translateX(0); }
       #sidebar-overlay {
         display: none;
         position: fixed;
@@ -75,11 +70,24 @@
       #sidebar-overlay { display: none !important; }
       #sidebar { transform: none !important; }
     }
-    /* Prevent input zoom on iOS */
     input, select, textarea { font-size: 16px !important; }
     @media (min-width: 768px) {
       input, select, textarea { font-size: 14px !important; }
     }
+    /* Onboarding */
+    #onboarding-overlay {
+      animation: fadeIn 0.25s ease;
+    }
+    #onboarding-card {
+      animation: slideUp 0.3s ease;
+    }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(16px) scale(0.98); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .ob-dot { width: 8px; height: 8px; border-radius: 9999px; background: #4b5563; transition: all 0.2s; }
+    .ob-dot.active { background: #8b5cf6; width: 20px; }
   </style>
 </head>
 <body class="bg-gray-950 text-gray-100 flex overflow-hidden">
@@ -116,7 +124,6 @@
 
   <!-- Main -->
   <main class="flex-1 flex flex-col min-w-0 h-full">
-    <!-- Header -->
     <header class="h-14 min-h-[56px] border-b border-gray-800 flex items-center justify-between gap-2 px-3 sm:px-4 shrink-0 bg-gray-950/90 backdrop-blur z-10">
       <div class="flex items-center gap-2 min-w-0 flex-1">
         <button id="btn-toggle-sidebar" class="md:hidden p-2 -ml-1 rounded-lg hover:bg-gray-800 shrink-0" aria-label="Menu">
@@ -129,14 +136,12 @@
       </div>
       <button id="btn-settings" class="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg bg-gray-800 hover:bg-gray-700 text-sm transition shrink-0">
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="shrink-0"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-        <span class="hidden xs:inline sm:inline" data-i18n="settings">Settings</span>
+        <span class="hidden sm:inline" data-i18n="settings">Settings</span>
       </button>
     </header>
 
-    <!-- Messages -->
     <div id="chat-container" class="flex-1 overflow-y-auto overflow-x-hidden scrollbar-thin p-3 sm:p-4 md:p-6 space-y-4 sm:space-y-6"></div>
 
-    <!-- Input -->
     <div class="border-t border-gray-800 p-3 sm:p-4 bg-gray-950 pb-[max(0.75rem,var(--safe-bottom))]">
       <div class="max-w-3xl mx-auto">
         <div class="relative flex items-end gap-1.5 sm:gap-2 bg-gray-900 rounded-2xl border border-gray-700 focus-within:border-brand-500 transition">
@@ -208,11 +213,36 @@
           <strong data-i18n="securityTitle">Security note:</strong>
           <span data-i18n="securityBody"> Your API key is sent only to the provider you choose. No third-party server is used. Some providers may block browser requests due to CORS.</span>
         </div>
+
+        <button id="btn-show-tour" class="w-full text-left text-sm text-brand-400 hover:text-brand-300 py-1" data-i18n="showTour">Show tutorial again</button>
       </div>
 
       <div class="px-4 sm:px-5 py-3 border-t border-gray-800 flex flex-wrap justify-end gap-2 shrink-0 pb-[max(0.75rem,var(--safe-bottom))]">
         <button id="btn-clear-keys" class="px-3 py-2 text-sm text-red-400 hover:text-red-300" data-i18n="clearKeys">Clear keys</button>
         <button id="btn-save-settings" class="px-5 py-2 bg-brand-600 hover:bg-brand-500 rounded-lg text-sm font-medium transition" data-i18n="save">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Onboarding Tutorial -->
+  <div id="onboarding-overlay" class="fixed inset-0 z-[60] hidden items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+    <div id="onboarding-card" class="bg-gray-900 border border-gray-700 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden">
+      <div class="p-6 sm:p-8">
+        <div id="ob-icon" class="w-14 h-14 rounded-2xl bg-brand-600/20 flex items-center justify-center mb-5 text-brand-400">
+          <!-- filled by JS -->
+        </div>
+        <h2 id="ob-title" class="text-xl font-semibold text-white mb-2"></h2>
+        <p id="ob-desc" class="text-gray-400 text-sm leading-relaxed"></p>
+        <div id="ob-extra" class="mt-4 hidden"></div>
+      </div>
+
+      <div class="px-6 sm:px-8 pb-6 sm:pb-8 flex flex-col gap-4">
+        <div id="ob-dots" class="flex items-center justify-center gap-1.5"></div>
+        <div class="flex items-center gap-2">
+          <button id="ob-skip" class="px-4 py-2.5 text-sm text-gray-400 hover:text-gray-200 transition"></button>
+          <div class="flex-1"></div>
+          <button id="ob-next" class="px-5 py-2.5 bg-brand-600 hover:bg-brand-500 rounded-xl text-sm font-medium transition active:scale-95"></button>
+        </div>
       </div>
     </div>
   </div>

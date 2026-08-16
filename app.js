@@ -1,4 +1,4 @@
-/* MDC AI STUDIO - Client-side BYOK Chat + i18n + mobile fixes */
+/* MDC AI STUDIO - BYOK Chat + i18n + mobile + onboarding */
 (function () {
   'use strict';
 
@@ -38,7 +38,22 @@
       errorHint: '**Tip:** This may be a CORS block. Try OpenRouter or Groq, or use your own proxy.',
       errorPrefix: 'Error:',
       custom: 'Custom',
-      delete: 'Delete'
+      delete: 'Delete',
+      showTour: 'Show tutorial again',
+      // Onboarding
+      obSkip: 'Skip',
+      obNext: 'Next',
+      obStart: 'Get started',
+      obFinish: 'Start chatting',
+      ob1Title: 'Welcome to MDC AI STUDIO',
+      ob1Desc: 'Chat with any AI model using your own API key. No subscription, no middleman — just you and the providers you choose.',
+      ob2Title: 'Your keys stay private',
+      ob2Desc: 'API keys and chat history are stored only in your browser. Nothing is sent to our servers. You talk directly to OpenAI, Groq, OpenRouter, and more.',
+      ob3Title: 'Add your API key',
+      ob3Desc: 'Open Settings (gear icon), pick a provider (OpenRouter or Groq work great), paste your key, choose a model, and hit Save.',
+      ob3Tip: 'Tip: OpenRouter gives access to many models with one key.',
+      ob4Title: 'You are ready',
+      ob4Desc: 'Type a message below and press Enter. You can create new chats from the sidebar and switch models anytime in Settings.'
     },
     tr: {
       newChat: 'Yeni sohbet',
@@ -74,7 +89,21 @@
       errorHint: '**İpucu:** CORS engeli olabilir. OpenRouter veya Groq deneyin, ya da kendi proxy\'nizi kullanın.',
       errorPrefix: 'Hata:',
       custom: 'Özel',
-      delete: 'Sil'
+      delete: 'Sil',
+      showTour: 'Öğreticiyi tekrar göster',
+      obSkip: 'Geç',
+      obNext: 'İleri',
+      obStart: 'Başla',
+      obFinish: 'Sohbete başla',
+      ob1Title: 'MDC AI STUDIO\'ya hoş geldin',
+      ob1Desc: 'Kendi API anahtarını kullanarak istediğin yapay zeka modeliyle sohbet et. Abonelik yok, aracı yok — sadece sen ve seçtiğin sağlayıcılar.',
+      ob2Title: 'Anahtarların güvende',
+      ob2Desc: 'API anahtarları ve sohbet geçmişi yalnızca tarayıcında saklanır. Sunucumuza hiçbir şey gitmez. OpenAI, Groq, OpenRouter ve diğerlerine doğrudan bağlanırsın.',
+      ob3Title: 'API anahtarını ekle',
+      ob3Desc: 'Ayarlar (dişli ikonu) aç, bir sağlayıcı seç (OpenRouter veya Groq çok rahat çalışır), anahtarını yapıştır, model seç ve Kaydet\'e bas.',
+      ob3Tip: 'İpucu: OpenRouter ile tek anahtarla birçok modele erişebilirsin.',
+      ob4Title: 'Hazırsın',
+      ob4Desc: 'Aşağıya mesajını yazıp Enter\'a bas. Yan menüden yeni sohbet açabilir, Ayarlar\'dan model değiştirebilirsin.'
     }
   };
 
@@ -102,28 +131,20 @@
     renderMessages();
   }
 
-  // Country → language (extendable)
-  const COUNTRY_LANG = {
-    TR: 'tr', CY: 'tr',
-    // default everything else → en
-  };
+  const COUNTRY_LANG = { TR: 'tr', CY: 'tr' };
 
   async function detectLangFromCountry() {
-    // 1) Saved preference wins
     const saved = settings.langPref;
     if (saved && saved !== 'auto' && I18N[saved]) return saved;
 
-    // 2) Browser language
     const nav = (navigator.language || navigator.userLanguage || 'en').toLowerCase();
     if (nav.startsWith('tr')) return 'tr';
 
-    // 3) Timezone hint (no network)
     try {
       const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
       if (tz === 'Europe/Istanbul' || tz === 'Asia/Istanbul') return 'tr';
     } catch (_) {}
 
-    // 4) IP country (best-effort, short timeout)
     try {
       const ctrl = new AbortController();
       const timer = setTimeout(() => ctrl.abort(), 2500);
@@ -141,52 +162,28 @@
 
   // ---------- Providers ----------
   const PROVIDERS = {
-    openai: {
-      name: 'OpenAI',
-      baseUrl: 'https://api.openai.com/v1',
-      models: ['gpt-4o', 'gpt-4o-mini', 'gpt-4.1', 'gpt-4.1-mini', 'o3-mini', 'o4-mini']
-    },
-    groq: {
-      name: 'Groq',
-      baseUrl: 'https://api.groq.com/openai/v1',
-      models: ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant', 'meta-llama/llama-4-scout-17b-16e-instruct', 'qwen/qwen3-32b', 'openai/gpt-oss-120b']
-    },
-    openrouter: {
-      name: 'OpenRouter',
-      baseUrl: 'https://openrouter.ai/api/v1',
-      models: ['openai/gpt-4o', 'openai/gpt-4o-mini', 'anthropic/claude-sonnet-4', 'google/gemini-2.5-flash', 'deepseek/deepseek-chat', 'x-ai/grok-3']
-    },
-    deepseek: {
-      name: 'DeepSeek',
-      baseUrl: 'https://api.deepseek.com',
-      models: ['deepseek-chat', 'deepseek-reasoner']
-    },
-    xai: {
-      name: 'xAI',
-      baseUrl: 'https://api.x.ai/v1',
-      models: ['grok-3', 'grok-3-mini', 'grok-2']
-    },
-    custom: {
-      nameKey: 'custom',
-      baseUrl: '',
-      models: []
-    }
+    openai: { name: 'OpenAI', baseUrl: 'https://api.openai.com/v1', models: ['gpt-4o', 'gpt-4o-mini', 'gpt-4.1', 'gpt-4.1-mini', 'o3-mini', 'o4-mini'] },
+    groq: { name: 'Groq', baseUrl: 'https://api.groq.com/openai/v1', models: ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant', 'meta-llama/llama-4-scout-17b-16e-instruct', 'qwen/qwen3-32b', 'openai/gpt-oss-120b'] },
+    openrouter: { name: 'OpenRouter', baseUrl: 'https://openrouter.ai/api/v1', models: ['openai/gpt-4o', 'openai/gpt-4o-mini', 'anthropic/claude-sonnet-4', 'google/gemini-2.5-flash', 'deepseek/deepseek-chat', 'x-ai/grok-3'] },
+    deepseek: { name: 'DeepSeek', baseUrl: 'https://api.deepseek.com', models: ['deepseek-chat', 'deepseek-reasoner'] },
+    xai: { name: 'xAI', baseUrl: 'https://api.x.ai/v1', models: ['grok-3', 'grok-3-mini', 'grok-2'] },
+    custom: { nameKey: 'custom', baseUrl: '', models: [] }
   };
 
   const STORAGE_KEYS = {
     settings: 'mdc_ai_settings',
     chats: 'mdc_ai_chats',
-    activeChat: 'mdc_ai_active_chat'
+    activeChat: 'mdc_ai_active_chat',
+    onboarded: 'mdc_ai_onboarded'
   };
 
-  // ---------- State ----------
   let settings = loadSettings();
   let chats = loadChats();
   let activeChatId = localStorage.getItem(STORAGE_KEYS.activeChat) || null;
   let isGenerating = false;
   let abortController = null;
+  let obStep = 0;
 
-  // ---------- DOM ----------
   const $ = (sel) => document.querySelector(sel);
   const chatContainer = $('#chat-container');
   const chatList = $('#chat-list');
@@ -205,6 +202,88 @@
   const langSelect = $('#lang-select');
   const sidebar = $('#sidebar');
   const sidebarOverlay = $('#sidebar-overlay');
+  const onboardingOverlay = $('#onboarding-overlay');
+
+  // ---------- Onboarding ----------
+  const OB_ICONS = [
+    // welcome
+    '<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2z"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>',
+    // privacy
+    '<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>',
+    // key
+    '<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="7.5" cy="15.5" r="5.5"/><path d="m21 2-9.6 9.6"/><path d="m15.5 7.5 3 3L22 7l-3-3"/></svg>',
+    // ready
+    '<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>'
+  ];
+
+  function getObSteps() {
+    return [
+      { title: t('ob1Title'), desc: t('ob1Desc'), extra: null },
+      { title: t('ob2Title'), desc: t('ob2Desc'), extra: null },
+      { title: t('ob3Title'), desc: t('ob3Desc'), extra: t('ob3Tip') },
+      { title: t('ob4Title'), desc: t('ob4Desc'), extra: null }
+    ];
+  }
+
+  function renderOnboarding() {
+    const steps = getObSteps();
+    const step = steps[obStep];
+    if (!step) return;
+
+    $('#ob-icon').innerHTML = OB_ICONS[obStep] || OB_ICONS[0];
+    $('#ob-title').textContent = step.title;
+    $('#ob-desc').textContent = step.desc;
+
+    const extra = $('#ob-extra');
+    if (step.extra) {
+      extra.classList.remove('hidden');
+      extra.innerHTML = `<div class="bg-brand-950/50 border border-brand-800/40 rounded-xl px-3 py-2.5 text-xs text-brand-200/90 leading-relaxed">${escapeHtml(step.extra)}</div>`;
+    } else {
+      extra.classList.add('hidden');
+      extra.innerHTML = '';
+    }
+
+    // dots
+    const dots = $('#ob-dots');
+    dots.innerHTML = steps.map((_, i) =>
+      `<span class="ob-dot ${i === obStep ? 'active' : ''}"></span>`
+    ).join('');
+
+    // buttons
+    const isLast = obStep === steps.length - 1;
+    const isFirst = obStep === 0;
+    $('#ob-skip').textContent = isLast ? '' : t('obSkip');
+    $('#ob-skip').style.visibility = isLast ? 'hidden' : 'visible';
+    $('#ob-next').textContent = isFirst ? t('obStart') : (isLast ? t('obFinish') : t('obNext'));
+  }
+
+  function showOnboarding(force) {
+    if (!force && localStorage.getItem(STORAGE_KEYS.onboarded) === '1') return;
+    obStep = 0;
+    renderOnboarding();
+    onboardingOverlay.classList.remove('hidden');
+    onboardingOverlay.classList.add('flex');
+  }
+
+  function hideOnboarding() {
+    onboardingOverlay.classList.add('hidden');
+    onboardingOverlay.classList.remove('flex');
+    localStorage.setItem(STORAGE_KEYS.onboarded, '1');
+  }
+
+  function nextOnboarding() {
+    const steps = getObSteps();
+    if (obStep >= steps.length - 1) {
+      hideOnboarding();
+      // gently open settings if no key yet
+      if (!settings.apiKey) {
+        setTimeout(() => openSettings(), 350);
+      }
+      return;
+    }
+    obStep++;
+    renderOnboarding();
+  }
 
   // ---------- Init ----------
   async function init() {
@@ -221,20 +300,15 @@
     updateHeader();
     bindEvents();
     autoResizeTextarea();
+
+    // First-time tutorial (after a short delay so UI is ready)
+    setTimeout(() => showOnboarding(false), 400);
   }
 
-  // ---------- Storage ----------
   function loadSettings() {
     try {
       const raw = localStorage.getItem(STORAGE_KEYS.settings);
-      const def = {
-        provider: 'openrouter',
-        apiKey: '',
-        model: 'openai/gpt-4o-mini',
-        systemPrompt: '',
-        customBaseUrl: '',
-        langPref: 'auto'
-      };
+      const def = { provider: 'openrouter', apiKey: '', model: 'openai/gpt-4o-mini', systemPrompt: '', customBaseUrl: '', langPref: 'auto' };
       return raw ? { ...def, ...JSON.parse(raw) } : def;
     } catch {
       return { provider: 'openrouter', apiKey: '', model: '', systemPrompt: '', customBaseUrl: '', langPref: 'auto' };
@@ -258,7 +332,6 @@
     localStorage.setItem(STORAGE_KEYS.chats, JSON.stringify(chats));
   }
 
-  // ---------- Sidebar mobile ----------
   function openSidebar() {
     sidebar.classList.add('open');
     sidebarOverlay.classList.add('show');
@@ -274,16 +347,9 @@
     else openSidebar();
   }
 
-  // ---------- Chat Management ----------
   function createNewChat() {
     const id = 'chat_' + Date.now();
-    chats[id] = {
-      id,
-      title: t('newChatTitle'),
-      messages: [],
-      createdAt: Date.now(),
-      updatedAt: Date.now()
-    };
+    chats[id] = { id, title: t('newChatTitle'), messages: [], createdAt: Date.now(), updatedAt: Date.now() };
     activeChatId = id;
     localStorage.setItem(STORAGE_KEYS.activeChat, id);
     saveChats();
@@ -319,7 +385,6 @@
     closeSidebar();
   }
 
-  // ---------- Render ----------
   function renderChatList() {
     const sorted = Object.values(chats).sort((a, b) => b.updatedAt - a.updatedAt);
     chatList.innerHTML = sorted.map(chat => `
@@ -367,24 +432,20 @@
             <div class="message-user max-w-[88%] sm:max-w-[75%] md:max-w-[70%] rounded-2xl rounded-br-md px-3.5 py-2.5 text-sm text-white break-words">
               ${escapeHtml(msg.content).replace(/\n/g, '<br>')}
             </div>
-          </div>
-        `;
-      } else {
-        const html = marked.parse(msg.content || '');
-        return `
-          <div class="flex justify-start">
-            <div class="max-w-[92%] sm:max-w-[85%] md:max-w-[80%] bg-gray-900 border border-gray-800 rounded-2xl rounded-bl-md px-3.5 py-3 text-sm prose prose-invert prose-sm max-w-none break-words overflow-hidden">
-              ${html}
-            </div>
-          </div>
-        `;
+          </div>`;
       }
+      const html = marked.parse(msg.content || '');
+      return `
+        <div class="flex justify-start">
+          <div class="max-w-[92%] sm:max-w-[85%] md:max-w-[80%] bg-gray-900 border border-gray-800 rounded-2xl rounded-bl-md px-3.5 py-3 text-sm prose prose-invert prose-sm max-w-none break-words overflow-hidden">
+            ${html}
+          </div>
+        </div>`;
     }).join('');
 
     chatContainer.querySelectorAll('pre code').forEach((block) => {
       try { hljs.highlightElement(block); } catch (_) {}
     });
-
     chatContainer.scrollTop = chatContainer.scrollHeight;
   }
 
@@ -396,7 +457,6 @@
     currentModelLabel.textContent = settings.model || t('modelNotSelected');
   }
 
-  // ---------- Settings UI ----------
   function openSettings() {
     providerSelect.value = settings.provider || 'openrouter';
     apiKeyInput.value = settings.apiKey || '';
@@ -416,11 +476,7 @@
   }
 
   function toggleCustomUrl() {
-    if (providerSelect.value === 'custom') {
-      customBaseUrlWrap.classList.remove('hidden');
-    } else {
-      customBaseUrlWrap.classList.add('hidden');
-    }
+    customBaseUrlWrap.classList.toggle('hidden', providerSelect.value !== 'custom');
   }
 
   function fillModelList() {
@@ -437,11 +493,8 @@
     settings.langPref = langSelect.value;
     saveSettings();
 
-    if (settings.langPref === 'auto') {
-      lang = await detectLangFromCountry();
-    } else {
-      lang = settings.langPref;
-    }
+    if (settings.langPref === 'auto') lang = await detectLangFromCountry();
+    else lang = settings.langPref;
     applyI18n();
     closeSettings();
   }
@@ -460,7 +513,6 @@
     updateHeader();
   }
 
-  // ---------- API Call ----------
   async function sendMessage() {
     const text = userInput.value.trim();
     if (!text || isGenerating) return;
@@ -495,11 +547,8 @@
     renderMessages();
 
     const messagesForApi = [];
-    if (settings.systemPrompt) {
-      messagesForApi.push({ role: 'system', content: settings.systemPrompt });
-    }
-    const history = chat.messages.slice(0, -1);
-    history.forEach(m => messagesForApi.push({ role: m.role, content: m.content }));
+    if (settings.systemPrompt) messagesForApi.push({ role: 'system', content: settings.systemPrompt });
+    chat.messages.slice(0, -1).forEach(m => messagesForApi.push({ role: m.role, content: m.content }));
 
     const baseUrl = settings.provider === 'custom'
       ? (settings.customBaseUrl || '').replace(/\/$/, '')
@@ -547,7 +596,6 @@
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
-
         buffer += decoder.decode(value, { stream: true });
         const lines = buffer.split('\n');
         buffer = lines.pop() || '';
@@ -557,7 +605,6 @@
           if (!trimmed || !trimmed.startsWith('data: ')) continue;
           const data = trimmed.slice(6);
           if (data === '[DONE]') continue;
-
           try {
             const json = JSON.parse(data);
             const delta = json.choices?.[0]?.delta?.content || '';
@@ -574,14 +621,12 @@
       chat.updatedAt = Date.now();
       saveChats();
       renderMessages();
-
     } catch (err) {
       if (err.name === 'AbortError') {
         chat.messages[chat.messages.length - 1].content += '\n\n' + t('stopped');
       } else {
-        const msg = err.message || String(err);
         chat.messages[chat.messages.length - 1].content =
-          `❌ ${t('errorPrefix')} ${msg}\n\n${t('errorHint')}`;
+          `❌ ${t('errorPrefix')} ${err.message || String(err)}\n\n${t('errorHint')}`;
       }
       saveChats();
       renderMessages();
@@ -615,7 +660,6 @@
     btnSend.disabled = false;
   }
 
-  // ---------- Helpers ----------
   function escapeHtml(str) {
     return String(str)
       .replace(/&/g, '&amp;')
@@ -629,7 +673,6 @@
     userInput.style.height = Math.min(userInput.scrollHeight, 128) + 'px';
   }
 
-  // ---------- Events ----------
   function bindEvents() {
     btnSend.addEventListener('click', sendMessage);
     userInput.addEventListener('keydown', (e) => {
@@ -649,9 +692,7 @@
       toggleCustomUrl();
       fillModelList();
       const p = PROVIDERS[providerSelect.value];
-      if (p && p.models.length && !modelInput.value) {
-        modelInput.value = p.models[0];
-      }
+      if (p && p.models.length && !modelInput.value) modelInput.value = p.models[0];
     });
 
     settingsModal.addEventListener('click', (e) => {
@@ -662,11 +703,19 @@
     $('#btn-close-sidebar')?.addEventListener('click', closeSidebar);
     sidebarOverlay?.addEventListener('click', closeSidebar);
 
-    // Close sidebar on escape
+    // Onboarding
+    $('#ob-next')?.addEventListener('click', nextOnboarding);
+    $('#ob-skip')?.addEventListener('click', hideOnboarding);
+    $('#btn-show-tour')?.addEventListener('click', () => {
+      closeSettings();
+      showOnboarding(true);
+    });
+
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
         closeSidebar();
         closeSettings();
+        if (!onboardingOverlay.classList.contains('hidden')) hideOnboarding();
       }
     });
   }
