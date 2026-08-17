@@ -1,1 +1,259 @@
-LOADING_FROM_ARTIFACTS
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1" />
+  <title>MDC AI STUDIO</title>
+  <meta name="description" content="Modern, secure Bring Your Own Key AI chat. Use any model with your own API key." />
+  <meta name="theme-color" content="#0b0b3a" />
+  <link rel="icon" type="image/svg+xml" href="icon.svg" />
+  <link rel="apple-touch-icon" href="icon.svg" />
+  <link rel="manifest" href="manifest.json" />
+  <meta name="application-name" content="MDC AI STUDIO" />
+  <meta property="og:title" content="MDC AI STUDIO" />
+  <meta property="og:image" content="icon.svg" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#f5f3ff', 100: '#ede9fe', 200: '#ddd6fe', 300: '#c4b5fd',
+              400: '#a78bfa', 500: '#8b5cf6', 600: '#7c3aed', 700: '#6d28d9',
+              800: '#5b21b6', 900: '#4c1d95',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    :root { --safe-bottom: env(safe-area-inset-bottom, 0px); }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; height: 100dvh; }
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      overscroll-behavior: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .scrollbar-thin::-webkit-scrollbar { width: 5px; height: 5px; }
+    .scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
+    .scrollbar-thin::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 3px; }
+    .prose pre { background: #0d1117 !important; border-radius: 0.5rem; padding: 0.75rem; overflow-x: auto; max-width: 100%; }
+    .prose code { font-size: 0.85em; word-break: break-word; }
+    .prose p { margin-bottom: 0.6rem; }
+    .prose ul, .prose ol { margin-left: 1.1rem; margin-bottom: 0.6rem; }
+    .prose * { max-width: 100%; }
+    .message-user { background: linear-gradient(135deg, #7c3aed 0%, #5b21b6 100%); }
+    #chat-container { scroll-behavior: smooth; -webkit-overflow-scrolling: touch; }
+    #sidebar { transition: transform 0.25s ease; }
+    @media (max-width: 767px) {
+      #sidebar {
+        position: fixed;
+        inset: 0 auto 0 0;
+        z-index: 40;
+        width: min(280px, 85vw);
+        transform: translateX(-100%);
+      }
+      #sidebar.open { transform: translateX(0); }
+      #sidebar-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.55);
+        z-index: 35;
+        backdrop-filter: blur(2px);
+      }
+      #sidebar-overlay.show { display: block; }
+    }
+    @media (min-width: 768px) {
+      #sidebar-overlay { display: none !important; }
+      #sidebar { transform: none !important; }
+    }
+    input, select, textarea { font-size: 16px !important; }
+    @media (min-width: 768px) {
+      input, select, textarea { font-size: 14px !important; }
+    }
+    #onboarding-overlay { animation: fadeIn 0.25s ease; }
+    #onboarding-card { animation: slideUp 0.3s ease; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(16px) scale(0.98); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .ob-dot { width: 8px; height: 8px; border-radius: 9999px; background: #4b5563; transition: all 0.2s; }
+    .ob-dot.active { background: #8b5cf6; width: 20px; }
+    #input-area.drag-over {
+      outline: 2px dashed #8b5cf6;
+      outline-offset: 2px;
+      background: rgba(139, 92, 246, 0.08);
+    }
+    .attach-thumb {
+      width: 56px; height: 56px; object-fit: cover; border-radius: 0.5rem;
+    }
+  </style>
+</head>
+<body class="bg-gray-950 text-gray-100 flex overflow-hidden">
+
+  <div id="sidebar-overlay"></div>
+
+  <aside id="sidebar" class="bg-gray-900 border-r border-gray-800 flex flex-col shrink-0 w-64 md:w-64">
+    <div class="p-3 sm:p-4 border-b border-gray-800 flex items-center justify-between gap-2 min-h-[56px]">
+      <div class="flex items-center gap-2 min-w-0">
+        <img src="icon.svg" alt="MDC AI STUDIO" class="w-8 h-8 rounded-lg shrink-0 object-cover shadow-sm" width="32" height="32" />
+        <span class="font-semibold text-sm tracking-tight truncate">MDC AI STUDIO</span>
+      </div>
+      <div class="flex items-center gap-1 shrink-0">
+        <button id="btn-new-chat" class="p-2 rounded-lg hover:bg-gray-800 text-gray-400 hover:text-white" data-i18n-title="newChat">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+        </button>
+        <button id="btn-close-sidebar" class="md:hidden p-2 rounded-lg hover:bg-gray-800 text-gray-400">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div id="chat-list" class="flex-1 overflow-y-auto scrollbar-thin p-2 space-y-0.5"></div>
+
+    <div class="p-3 border-t border-gray-800 text-xs text-gray-500 pb-[max(0.75rem,var(--safe-bottom))]">
+      <div class="flex items-center gap-1.5">
+        <span class="w-2 h-2 rounded-full bg-green-500 shrink-0"></span>
+        <span data-i18n="keysLocalOnly">Keys stay in your browser</span>
+      </div>
+    </div>
+  </aside>
+
+  <main class="flex-1 flex flex-col min-w-0 h-full">
+    <header class="h-14 min-h-[56px] border-b border-gray-800 flex items-center justify-between gap-2 px-3 sm:px-4 shrink-0 bg-gray-950/90 backdrop-blur z-10">
+      <div class="flex items-center gap-2 min-w-0 flex-1">
+        <button id="btn-toggle-sidebar" class="md:hidden p-2 -ml-1 rounded-lg hover:bg-gray-800 shrink-0" aria-label="Menu">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+        </button>
+        <div class="min-w-0 overflow-hidden">
+          <div id="current-model-label" class="text-sm font-medium text-gray-200 truncate">—</div>
+          <div id="current-provider-label" class="text-xs text-gray-500 truncate">—</div>
+        </div>
+      </div>
+      <button id="btn-settings" class="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg bg-gray-800 hover:bg-gray-700 text-sm transition shrink-0">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="shrink-0"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        <span class="hidden sm:inline" data-i18n="settings">Settings</span>
+      </button>
+    </header>
+
+    <div id="chat-container" class="flex-1 overflow-y-auto overflow-x-hidden scrollbar-thin p-3 sm:p-4 md:p-6 space-y-4 sm:space-y-6"></div>
+
+    <div class="border-t border-gray-800 p-3 sm:p-4 bg-gray-950 pb-[max(0.75rem,var(--safe-bottom))]">
+      <div class="max-w-3xl mx-auto">
+        <div id="attach-preview" class="hidden flex flex-wrap gap-2 mb-2"></div>
+
+        <div id="input-area" class="relative flex items-end gap-1 sm:gap-1.5 bg-gray-900 rounded-2xl border border-gray-700 focus-within:border-brand-500 transition">
+          <input type="file" id="file-input" class="hidden" multiple accept="image/*,.txt,.md,.json,.csv,.js,.ts,.py,.html,.css,.xml,.yaml,.yml,.log,.pdf" />
+          <button id="btn-attach" type="button" class="m-1.5 sm:m-2 p-2.5 rounded-xl text-gray-400 hover:text-white hover:bg-gray-800 transition shrink-0 touch-manipulation" data-i18n-title="attachFile" title="Attach file">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+          </button>
+          <textarea id="user-input" rows="1" data-i18n-placeholder="inputPlaceholder" placeholder="Type a message..." class="flex-1 bg-transparent resize-none px-1 py-3 text-sm outline-none max-h-32 sm:max-h-40 scrollbar-thin leading-relaxed" style="min-height: 48px;"></textarea>
+          <button id="btn-send" class="m-1.5 sm:m-2 p-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed transition shrink-0 touch-manipulation">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
+          </button>
+        </div>
+        <p class="text-center text-[11px] sm:text-xs text-gray-600 mt-2 px-1" data-i18n="footerNote">API keys stay only in your browser • MDC AI STUDIO</p>
+      </div>
+    </div>
+  </main>
+
+  <div id="settings-modal" class="fixed inset-0 z-50 hidden items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm p-0 sm:p-4">
+    <div class="bg-gray-900 border border-gray-700 sm:rounded-2xl w-full sm:max-w-lg max-h-[92dvh] sm:max-h-[85vh] shadow-2xl overflow-hidden flex flex-col rounded-t-2xl sm:rounded-2xl">
+      <div class="flex items-center justify-between px-4 sm:px-5 py-3.5 border-b border-gray-800 shrink-0">
+        <h2 class="font-semibold text-base sm:text-lg" data-i18n="settings">Settings</h2>
+        <button id="btn-close-settings" class="p-2 -mr-1 rounded-lg hover:bg-gray-800 text-gray-400 hover:text-white">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <div class="p-4 sm:p-5 space-y-4 overflow-y-auto scrollbar-thin flex-1">
+        <div>
+          <label class="block text-sm font-medium text-gray-300 mb-1.5" data-i18n="language">Language</label>
+          <select id="lang-select" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2.5 outline-none focus:border-brand-500">
+            <option value="auto">Auto (by country)</option>
+            <option value="tr">Türkçe</option>
+            <option value="en">English</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-300 mb-1.5" data-i18n="provider">Provider</label>
+          <select id="provider-select" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2.5 outline-none focus:border-brand-500">
+            <option value="openai">OpenAI</option>
+            <option value="groq">Groq</option>
+            <option value="openrouter">OpenRouter</option>
+            <option value="deepseek">DeepSeek</option>
+            <option value="xai">xAI (Grok)</option>
+            <option value="custom">Custom</option>
+          </select>
+        </div>
+
+        <div id="custom-base-url-wrap" class="hidden">
+          <label class="block text-sm font-medium text-gray-300 mb-1.5">Base URL</label>
+          <input id="custom-base-url" type="url" inputmode="url" placeholder="https://api.example.com/v1" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2.5 outline-none focus:border-brand-500" />
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-300 mb-1.5" data-i18n="apiKey">API Key</label>
+          <input id="api-key-input" type="password" autocomplete="off" placeholder="sk-... / gsk_..." class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2.5 outline-none focus:border-brand-500 font-mono text-sm" />
+          <p class="text-xs text-gray-500 mt-1.5" data-i18n="keyHint">Key is stored only in your browser (localStorage).</p>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-300 mb-1.5" data-i18n="model">Model</label>
+          <input id="model-input" type="text" list="model-list" placeholder="e.g. gpt-4o-mini" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2.5 outline-none focus:border-brand-500" />
+          <datalist id="model-list"></datalist>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-300 mb-1.5" data-i18n="systemPrompt">System Prompt (optional)</label>
+          <textarea id="system-prompt" rows="3" data-i18n-placeholder="systemPlaceholder" placeholder="You are a helpful assistant..." class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2.5 outline-none focus:border-brand-500 resize-none"></textarea>
+        </div>
+
+        <div class="bg-amber-950/40 border border-amber-800/50 rounded-lg p-3 text-xs text-amber-200/90 leading-relaxed">
+          <strong data-i18n="securityTitle">Security note:</strong>
+          <span data-i18n="securityBody"> Your API key is sent only to the provider you choose. No third-party server is used. Some providers may block browser requests due to CORS.</span>
+        </div>
+
+        <button id="btn-show-tour" class="w-full text-left text-sm text-brand-400 hover:text-brand-300 py-1" data-i18n="showTour">Show tutorial again</button>
+      </div>
+
+      <div class="px-4 sm:px-5 py-3 border-t border-gray-800 flex flex-wrap justify-end gap-2 shrink-0 pb-[max(0.75rem,var(--safe-bottom))]">
+        <button id="btn-clear-keys" class="px-3 py-2 text-sm text-red-400 hover:text-red-300" data-i18n="clearKeys">Clear keys</button>
+        <button id="btn-save-settings" class="px-5 py-2 bg-brand-600 hover:bg-brand-500 rounded-lg text-sm font-medium transition" data-i18n="save">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="onboarding-overlay" class="fixed inset-0 z-[60] hidden items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+    <div id="onboarding-card" class="bg-gray-900 border border-gray-700 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden">
+      <div class="p-6 sm:p-8">
+        <div id="ob-icon" class="w-14 h-14 rounded-2xl bg-brand-600/20 flex items-center justify-center mb-5 text-brand-400"></div>
+        <h2 id="ob-title" class="text-xl font-semibold text-white mb-2"></h2>
+        <p id="ob-desc" class="text-gray-400 text-sm leading-relaxed"></p>
+        <div id="ob-extra" class="mt-4 hidden"></div>
+      </div>
+      <div class="px-6 sm:px-8 pb-6 sm:pb-8 flex flex-col gap-4">
+        <div id="ob-dots" class="flex items-center justify-center gap-1.5"></div>
+        <div class="flex items-center gap-2">
+          <button id="ob-skip" class="px-4 py-2.5 text-sm text-gray-400 hover:text-gray-200 transition"></button>
+          <div class="flex-1"></div>
+          <button id="ob-next" class="px-5 py-2.5 bg-brand-600 hover:bg-brand-500 rounded-xl text-sm font-medium transition active:scale-95"></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

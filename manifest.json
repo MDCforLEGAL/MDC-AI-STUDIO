@@ -1,0 +1,12 @@
+{
+  "name": "MDC AI STUDIO",
+  "short_name": "MDC AI",
+  "description": "Bring Your Own Key AI chat studio",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#0b0b3a",
+  "theme_color": "#0b0b3a",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

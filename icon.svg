@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="MDC AI STUDIO">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#05052a"/>
+      <stop offset="55%" stop-color="#0d0a45"/>
+      <stop offset="100%" stop-color="#1a0a55"/>
+    </linearGradient>
+    <linearGradient id="glow" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#9b8cff" stop-opacity="0.9"/>
+      <stop offset="100%" stop-color="#6b5cff" stop-opacity="0.5"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="110" fill="url(#bg)"/>
+  <g stroke="url(#glow)" stroke-width="3.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M48 200 H130 L155 225 V310"/>
+    <path d="M48 340 H110 L135 315 H200"/>
+    <path d="M464 100 H390 L365 125 V200"/>
+    <path d="M464 290 H410 L385 315 V380"/>
+    <path d="M180 470 V400 L220 400 L245 375"/>
+    <path d="M300 470 V430 H360 L380 410"/>
+    <path d="M100 100 L130 100 L155 125"/>
+    <path d="M412 470 V430"/>
+  </g>
+  <g fill="#8b7cff">
+    <circle cx="48" cy="200" r="7"/><circle cx="48" cy="340" r="7"/>
+    <circle cx="464" cy="100" r="7"/><circle cx="464" cy="290" r="7"/>
+    <circle cx="155" cy="310" r="6"/><circle cx="200" cy="315" r="6"/>
+    <circle cx="180" cy="470" r="6"/><circle cx="300" cy="470" r="6"/>
+    <circle cx="245" cy="375" r="5"/><circle cx="412" cy="470" r="6"/>
+    <circle cx="100" cy="100" r="5"/><circle cx="380" cy="410" r="5"/>
+  </g>
+  <text x="256" y="168" text-anchor="middle" font-family="Arial Black, Helvetica Neue, Arial, sans-serif" font-weight="900" font-size="78" fill="#ffffff" letter-spacing="2">MDC</text>
+  <text x="256" y="292" text-anchor="middle" font-family="Arial Black, Helvetica Neue, Arial, sans-serif" font-weight="900" font-size="128" fill="#ffffff">AI</text>
+  <text x="256" y="362" text-anchor="middle" font-family="Arial, Helvetica Neue, sans-serif" font-weight="700" font-size="46" fill="#ffffff" letter-spacing="10">STUDIO</text>
+</svg>
