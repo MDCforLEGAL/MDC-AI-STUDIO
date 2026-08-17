@@ -1,2 +1,1 @@
-/* temp - will update */
-console.log('loading');
+/* see next commit for full bootloader */
